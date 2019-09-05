@@ -328,7 +328,9 @@ export class SuggestAdapter extends Adapter implements monaco.languages.Completi
 			detail: displayPartsToString(details.displayParts),
 			documentation: {
 				value: displayPartsToString(details.documentation)
-			}
+			},
+			// this should be done in `provideCompletionItems` as soon as https://github.com/microsoft/TypeScript/issues/33092 lands
+			tags: SuggestAdapter.convertTags(details.tags)
 		};
 	}
 
@@ -363,6 +365,18 @@ export class SuggestAdapter extends Adapter implements monaco.languages.Completi
 		}
 
 		return monaco.languages.CompletionItemKind.Property;
+	}
+
+	private static convertTags(tags?: ts.JSDocTagInfo[]): readonly monaco.languages.CompletionItemTag[] | undefined {
+		if (!tags)
+			return undefined;
+
+		const convertedTags = [];
+		for (const tag of tags) {
+			if (tag.name === "deprecated")
+				convertedTags.push(monaco.languages.CompletionItemTag.Deprecated);
+		}
+		return convertedTags;
 	}
 }
 
